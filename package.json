@@ -1,0 +1,46 @@
+{
+  "name": "luxury-holiday-portal",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Luxury holiday booking portal with React frontend and Netlify Functions backend.",
+  "engines": {
+    "node": ">=18"
+  },
+  "scripts": {
+    "dev": "netlify dev",
+    "dev:frontend": "npm run dev --prefix frontend",
+    "dev:backend": "node backend/server.js",
+    "dev:all": "concurrently \"npm run dev:backend\" \"npm run dev:frontend\"",
+    "build": "npm run build:frontend",
+    "build:frontend": "npm run build --prefix frontend",
+    "preview": "npm run preview --prefix frontend",
+    "lint": "npm run lint --prefix frontend",
+    "test": "npm run test --prefix frontend",
+    "format": "npx prettier --write \"**/*.{js,jsx,ts,tsx,css,md,json}\"",
+    "seed": "node backend/data/seed.js"
+  },
+  "workspaces": [
+    "frontend"
+  ],
+  "dependencies": {
+    "bcryptjs": "^2.4.3",
+    "better-sqlite3": "^11.6.0",
+    "compression": "^1.7.4",
+    "cors": "^2.8.5",
+    "dotenv": "^16.4.5",
+    "express": "^4.19.2",
+    "express-rate-limit": "^7.4.0",
+    "helmet": "^7.1.0",
+    "jsonwebtoken": "^9.0.2",
+    "morgan": "^1.10.0",
+    "serverless-http": "^3.2.0",
+    "uuid": "^9.0.1",
+    "validator": "^13.11.0",
+    "xss": "^1.0.14",
+    "zod": "^3.23.8"
+  },
+  "devDependencies": {
+    "netlify-cli": "^17.34.1",
+    "prettier": "^3.3.2"
+  }
+}

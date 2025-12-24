@@ -1,0 +1,23 @@
+[build]
+  base = "."
+  command = "npm run build"
+  publish = "frontend/dist"
+  functions = "netlify/functions"
+
+[dev]
+  command = "npm run dev:frontend"
+  port = 8888
+  targetPort = 5173
+  framework = "vite"
+  autoLaunch = false
+
+[[redirects]]
+  from = "/api/*"
+  to = "/.netlify/functions/api/:splat"
+  status = 200
+
+[functions]
+  node_bundler = "esbuild"
+  included_files = [
+    "backend/data/luxury_booking.db"
+  ]
