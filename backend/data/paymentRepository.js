@@ -1,7 +1,40 @@
 /**
  * Payment Repository
- * Database operations for payments
+ * Database operations for payments - works with both SQLite and JSON adapter
  */
+
+const isServerless = process.env.NETLIFY || process.env.AWS_LAMBDA_FUNCTION_NAME || process.env.VERCEL;
+
+if (isServerless) {
+  const jsonDb = require('./jsonDatabase');
+  module.exports = {
+    findById: (id) => jsonDb.payments.findById(id),
+    findByBookingId: (bookingId) => {
+      const payment = jsonDb.payments.findByBookingId(bookingId);
+      return payment ? [payment] : [];
+    },
+    findByUserId: (userId, options = {}) => jsonDb.payments.findAll({ user_id: userId, ...options }),
+    findAll: (options = {}) => jsonDb.payments.findAll(options),
+    create: (paymentData) => jsonDb.payments.create({
+      booking_id: paymentData.bookingId,
+      user_id: paymentData.userId,
+      amount: paymentData.amount,
+      currency: paymentData.currency || 'USD',
+      method: paymentData.method,
+      status: paymentData.status || 'pending',
+      transaction_id: paymentData.transactionId || null,
+      payment_data: paymentData.paymentData ? JSON.stringify(paymentData.paymentData) : null,
+    }),
+    update: (id, paymentData) => {
+      const updates = {};
+      if (paymentData.status !== undefined) updates.status = paymentData.status;
+      if (paymentData.transactionId !== undefined) updates.transaction_id = paymentData.transactionId;
+      if (paymentData.paymentData !== undefined) updates.payment_data = JSON.stringify(paymentData.paymentData);
+      return jsonDb.payments.update(id, updates);
+    },
+    getStats: (options = {}) => jsonDb.payments.getStats(),
+  };
+} else {
 
 const { db } = require('./database');
 const { v4: uuidv4 } = require('uuid');
@@ -238,3 +271,4 @@ const paymentRepository = {
 };
 
 module.exports = paymentRepository;
+}

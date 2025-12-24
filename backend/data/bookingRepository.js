@@ -1,7 +1,54 @@
 /**
  * Booking Repository
- * Database operations for bookings
+ * Database operations for bookings - works with both SQLite and JSON adapter
  */
+
+const isServerless = process.env.NETLIFY || process.env.AWS_LAMBDA_FUNCTION_NAME || process.env.VERCEL;
+
+if (isServerless) {
+  const jsonDb = require('./jsonDatabase');
+  module.exports = {
+    findById: (id) => jsonDb.bookings.findById(id),
+    findByUserId: (userId, options = {}) => jsonDb.bookings.findAll({ user_id: userId, ...options }),
+    findByPropertyId: (propertyId, options = {}) => jsonDb.bookings.findAll({ property_id: propertyId, ...options }),
+    findAll: (options = {}) => {
+      if (options.merchantId) {
+        return jsonDb.bookings.findByMerchant(options.merchantId);
+      }
+      return jsonDb.bookings.findAll(options);
+    },
+    create: (bookingData) => jsonDb.bookings.create({
+      property_id: bookingData.propertyId,
+      user_id: bookingData.userId,
+      check_in: bookingData.checkIn,
+      check_out: bookingData.checkOut,
+      guests: bookingData.guests || 1,
+      total_price: bookingData.totalPrice,
+      currency: bookingData.currency || 'USD',
+      status: bookingData.status || 'pending',
+      payment_status: bookingData.paymentStatus || 'unpaid',
+      special_requests: bookingData.specialRequests || null,
+    }),
+    update: (id, bookingData) => {
+      const updates = {};
+      if (bookingData.checkIn !== undefined) updates.check_in = bookingData.checkIn;
+      if (bookingData.checkOut !== undefined) updates.check_out = bookingData.checkOut;
+      if (bookingData.guests !== undefined) updates.guests = bookingData.guests;
+      if (bookingData.totalPrice !== undefined) updates.total_price = bookingData.totalPrice;
+      if (bookingData.status !== undefined) updates.status = bookingData.status;
+      if (bookingData.paymentStatus !== undefined) updates.payment_status = bookingData.paymentStatus;
+      if (bookingData.paymentId !== undefined) updates.payment_id = bookingData.paymentId;
+      if (bookingData.paymentMethod !== undefined) updates.payment_method = bookingData.paymentMethod;
+      if (bookingData.specialRequests !== undefined) updates.special_requests = bookingData.specialRequests;
+      return jsonDb.bookings.update(id, updates);
+    },
+    delete: (id) => { /* not implemented */ },
+    checkAvailability: (propertyId, checkIn, checkOut, excludeBookingId = null) => 
+      jsonDb.bookings.checkAvailability(propertyId, checkIn, checkOut),
+    count: (options = {}) => jsonDb.bookings.findAll(options).length,
+    getStats: (options = {}) => jsonDb.bookings.getStats(),
+  };
+} else {
 
 const { db } = require('./database');
 const { v4: uuidv4 } = require('uuid');
@@ -323,3 +370,4 @@ const bookingRepository = {
 };
 
 module.exports = bookingRepository;
+}

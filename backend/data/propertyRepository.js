@@ -1,12 +1,52 @@
 /**
  * Property Repository
- * Database operations for properties
+ * Database operations for properties - works with both SQLite and JSON adapter
  */
 
-const { db } = require('./database');
-const { v4: uuidv4 } = require('uuid');
+const isServerless = process.env.NETLIFY || process.env.AWS_LAMBDA_FUNCTION_NAME || process.env.VERCEL;
 
-const propertyRepository = {
+if (isServerless) {
+  const jsonDb = require('./jsonDatabase');
+  module.exports = {
+    findById: (id) => jsonDb.properties.findById(id),
+    findAll: (options = {}) => jsonDb.properties.findAll(options),
+    create: (propertyData) => jsonDb.properties.create({
+      name: propertyData.name,
+      description: propertyData.description || '',
+      location: propertyData.location,
+      address: propertyData.address || '',
+      price_per_night: propertyData.pricePerNight,
+      currency: propertyData.currency || 'USD',
+      bedrooms: propertyData.bedrooms || 1,
+      bathrooms: propertyData.bathrooms || 1,
+      max_guests: propertyData.maxGuests || 2,
+      amenities: propertyData.amenities || [],
+      images: propertyData.images || [],
+      merchant_id: propertyData.merchantId,
+      status: propertyData.status || 'active',
+    }),
+    update: (id, propertyData) => {
+      const updates = {};
+      if (propertyData.name !== undefined) updates.name = propertyData.name;
+      if (propertyData.description !== undefined) updates.description = propertyData.description;
+      if (propertyData.location !== undefined) updates.location = propertyData.location;
+      if (propertyData.address !== undefined) updates.address = propertyData.address;
+      if (propertyData.pricePerNight !== undefined) updates.price_per_night = propertyData.pricePerNight;
+      if (propertyData.bedrooms !== undefined) updates.bedrooms = propertyData.bedrooms;
+      if (propertyData.bathrooms !== undefined) updates.bathrooms = propertyData.bathrooms;
+      if (propertyData.maxGuests !== undefined) updates.max_guests = propertyData.maxGuests;
+      if (propertyData.amenities !== undefined) updates.amenities = propertyData.amenities;
+      if (propertyData.images !== undefined) updates.images = propertyData.images;
+      if (propertyData.status !== undefined) updates.status = propertyData.status;
+      return jsonDb.properties.update(id, updates);
+    },
+    delete: (id) => jsonDb.properties.delete(id),
+    updateRating: () => { /* not implemented for serverless */ },
+    count: (options = {}) => jsonDb.properties.findAll(options).length,
+    getFeatured: (limit = 6) => jsonDb.properties.findAll({ status: 'active' }).slice(0, limit),
+    getStats: () => jsonDb.properties.getStats(),
+  };
+} else {
   /**
    * Find property by ID
    */
@@ -238,7 +278,19 @@ const propertyRepository = {
       amenities: JSON.parse(p.amenities || '[]'),
       images: JSON.parse(p.images || '[]')
     }));
+  },
+
+  getStats() {
+    const stmt = db.prepare(`
+      SELECT 
+        COUNT(*) as total,
+        SUM(CASE WHEN status = 'active' THEN 1 ELSE 0 END) as active,
+        SUM(CASE WHEN status = 'pending' THEN 1 ELSE 0 END) as pending
+      FROM properties
+    `);
+    return stmt.get();
   }
 };
 
 module.exports = propertyRepository;
+}
