@@ -1,5 +1,5 @@
 /**
- * JSON-based Database for Serverless Environment (Netlify Functions)
+ * JSON-based Database for Serverless Environment (Netlify/Vercel Functions)
  * This provides in-memory storage with JSON fallback for serverless deployments
  */
 

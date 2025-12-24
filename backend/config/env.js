@@ -4,8 +4,16 @@ dotenv.config();
 
 const parseOrigins = (origins) => {
   if (!origins) {
-    // Allow all localhost ports for development
-    return ['http://localhost:5173', 'http://localhost:5174', 'http://localhost:5175', 'http://localhost:3000', 'http://localhost:8888'];
+    // Allow all localhost ports for development + Vercel deployments
+    return [
+      'http://localhost:5173', 
+      'http://localhost:5174', 
+      'http://localhost:5175', 
+      'http://localhost:3000', 
+      'http://localhost:8888',
+      'https://cda-task-frontend.vercel.app',
+      'https://cdatask.vercel.app'
+    ];
   }
   return origins.split(',').map((origin) => origin.trim()).filter(Boolean);
 };
