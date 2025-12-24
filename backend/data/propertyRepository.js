@@ -47,20 +47,24 @@ if (isServerless) {
     getStats: () => jsonDb.properties.getStats(),
   };
 } else {
-  /**
-   * Find property by ID
-   */
-  findById(id) {
-    const stmt = db.prepare('SELECT * FROM properties WHERE id = ?');
-    const property = stmt.get(id);
-    
-    if (property) {
-      property.amenities = JSON.parse(property.amenities || '[]');
-      property.images = JSON.parse(property.images || '[]');
-    }
-    
-    return property;
-  },
+  const { db } = require('./database');
+  const { v4: uuidv4 } = require('uuid');
+
+  const propertyRepository = {
+    /**
+     * Find property by ID
+     */
+    findById(id) {
+      const stmt = db.prepare('SELECT * FROM properties WHERE id = ?');
+      const property = stmt.get(id);
+      
+      if (property) {
+        property.amenities = JSON.parse(property.amenities || '[]');
+        property.images = JSON.parse(property.images || '[]');
+      }
+      
+      return property;
+    },
 
   /**
    * Get all properties with filters
